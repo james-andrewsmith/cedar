@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/api"
 )
@@ -96,10 +97,10 @@ func (c *CedarEngine) Eval(ctx context.Context, req EvalRequest) (EvalResult, er
 
 // EvalWithResponse evaluates the request against the policies and entities in the engine.
 // Returns the result as a json string.
-func (c *CedarEngine) EvalWithResponse(ctx context.Context, req EvalRequest) (EvalResponse, error) {
+func (c *CedarEngine) EvalWithResponse(ctx context.Context, req EvalRequest) (DetailedEvalResponse, error) {
 	evalPtr, err := c.writeEvalRequestInMemory(ctx, req)
 	if err != nil {
-		return EvalResponse{}, err
+		return DetailedEvalResponse{}, err
 	}
 	defer c.deallocateEvalRequestInMemory(ctx, evalPtr, req)
 	resPtr, err := c.exportedFuncs[string(isAuthorizedJSON)].Call(
@@ -114,13 +115,13 @@ func (c *CedarEngine) EvalWithResponse(ctx context.Context, req EvalRequest) (Ev
 		uint64(len(req.Context)),
 	)
 	if err != nil {
-		return EvalResponse{}, err
+		return DetailedEvalResponse{}, err
 	}
 	decision, err := c.readDecisionFromMemory(ctx, resPtr[0])
-	var evalResponse EvalResponse
+	var evalResponse DetailedEvalResponse
 	err = json.Unmarshal(decision, &evalResponse)
 	if err != nil {
-		return EvalResponse{}, err
+		return DetailedEvalResponse{}, err
 	}
 	return evalResponse, nil
 }

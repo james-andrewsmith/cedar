@@ -65,6 +65,8 @@ func isAuthorizedMustReturnDeny(t *testing.T, engine *CedarEngine, principal, ac
 
 func TestCedarEngine_EvalWithResponse(t *testing.T) {
 	policy := `
+	@id("policy_test")
+	@description("This is a test policy")
 	permit(
 		principal == User::"alice",
 		action    == Action::"update",
@@ -102,14 +104,26 @@ func evalJSONMustReturnAllow(t *testing.T, engine *CedarEngine, principal, actio
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.Decision != "Allow" {
+	if res.Response.Decision != "Allow" {
 		t.Fatal("expected Allow")
 	}
-	if res.Diagnostics.Reason[0] != "policy0" { // First policy as it is the only one. Cedar engine fixes the policy name to policy<number> if not provided.
+	if res.Response.Diagnostics.Reason[0] != "policy0" { // First policy as it is the only one. Cedar engine fixes the policy name to policy<number> if not provided.
 		t.Fatal("expected policy0 to be the reason for the decision")
 	}
-	if len(res.Diagnostics.Errors) != 0 {
+	if len(res.Response.Diagnostics.Errors) != 0 {
 		t.Fatal("expected no errors")
+	}
+	if len(res.Annotations) != 1 {
+		t.Fatal("expected one annotation")
+	}
+	if res.Annotations[0].Policy != "policy0" {
+		t.Fatal("expected policy0")
+	}
+	if res.Annotations[0].Key != "description" {
+		t.Fatal("expected key to be description")
+	}
+	if res.Annotations[0].Value != "This is a test policy" {
+		t.Fatal("expected value to be This is a test policy")
 	}
 }
 
@@ -123,13 +137,13 @@ func evalJSONMustReturnDeny(t *testing.T, engine *CedarEngine, principal, action
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.Decision != "Deny" {
+	if res.Response.Decision != "Deny" {
 		t.Fatal("expected Deny")
 	}
-	if len(res.Diagnostics.Reason) != 0 {
+	if len(res.Response.Diagnostics.Reason) != 0 {
 		t.Fatal("expected no reason for the decision")
 	}
-	if len(res.Diagnostics.Errors) != 0 {
+	if len(res.Response.Diagnostics.Errors) != 0 {
 		t.Fatal("expected no errors")
 	}
 }

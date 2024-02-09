@@ -25,6 +25,18 @@ type EvalRequest struct {
 	Context string `json:"context"`
 }
 
+type Annotation struct {
+	Policy string `json:"policy"`
+	Key    string `json:"key"`
+	Value  string `json:"value"`
+}
+
+type DetailedEvalResponse struct {
+	Response    EvalResponse `json:"response"`
+	Annotations []Annotation `json:"annotations"`
+	Errors      []string     `json:"errors"`
+}
+
 // EvalResponse is the response issued by the Eval function when in JSON Eval mode.
 type EvalResponse struct {
 	// Decision is the result of the policy evaluation.
